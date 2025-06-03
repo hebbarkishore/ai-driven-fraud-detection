@@ -1,0 +1,47 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+.venv/
+venv/
+env/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# ML models & data
+models/*.pkl
+models/*.joblib
+data/raw/
+data/processed/
+*.csv
+
+# Docker
+.dockerignore
+
+# Environment & secrets
+.env
+*.env.local
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# Logs
+logs/
+*.log
+
+# macOS
+.DS_Store
+
+# Kafka data
+kafka-data/
+zookeeper-data/
