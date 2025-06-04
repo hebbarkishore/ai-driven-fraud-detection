@@ -61,6 +61,18 @@ services:
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
       KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
 
+  enrichment-processor:
+    build:
+      context: ./streams
+      dockerfile: Dockerfile
+    container_name: fraud-enrichment
+    depends_on:
+      kafka:
+        condition: service_healthy
+    environment:
+      BOOTSTRAP_SERVERS: kafka:29092
+    restart: unless-stopped
+
   kafka-init:
     image: confluentinc/cp-kafka:7.6.1
     container_name: fraud-kafka-init
