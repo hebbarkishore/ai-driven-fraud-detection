@@ -73,6 +73,43 @@ services:
       BOOTSTRAP_SERVERS: kafka:29092
     restart: unless-stopped
 
+  scoring-service:
+    build:
+      context: ./scoring-service
+      dockerfile: Dockerfile
+    container_name: fraud-scoring
+    ports:
+      - "5000:5000"
+    environment:
+      MODELS_DIR: /models
+      API_KEY: ${API_KEY:-fraud-detection-api-key}
+      RISK_THRESHOLD_LOW: "0.60"
+      RISK_THRESHOLD_HIGH: "0.85"
+    volumes:
+      - ./models:/models:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  risk-router:
+    build:
+      context: ./scoring-service
+      dockerfile: Dockerfile.router
+    container_name: fraud-router
+    depends_on:
+      kafka:
+        condition: service_healthy
+      scoring-service:
+        condition: service_healthy
+    environment:
+      BOOTSTRAP_SERVERS: kafka:29092
+      SCORING_URL: http://scoring-service:5000/score
+      API_KEY: ${API_KEY:-fraud-detection-api-key}
+    restart: unless-stopped
+
   kafka-init:
     image: confluentinc/cp-kafka:7.6.1
     container_name: fraud-kafka-init
