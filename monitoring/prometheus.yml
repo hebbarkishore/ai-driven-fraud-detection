@@ -1,0 +1,12 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: scoring-service
+    static_configs:
+      - targets: ["scoring-service:5000"]
+
+  - job_name: kafka-jmx
+    static_configs:
+      - targets: ["kafka:9101"]

@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: transaction-producer
+  namespace: fraud-detection
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: transaction-producer
+  template:
+    metadata:
+      labels:
+        app: transaction-producer
+    spec:
+      containers:
+        - name: transaction-producer
+          image: fraud-producer:latest
+          args: ["--mode", "synthetic", "--tps", "500"]
+          envFrom:
+            - configMapRef:
+                name: fraud-detection-config
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "250m"
+              memory: "256Mi"

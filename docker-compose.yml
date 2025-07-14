@@ -110,6 +110,67 @@ services:
       API_KEY: ${API_KEY:-fraud-detection-api-key}
     restart: unless-stopped
 
+  prometheus:
+    image: prom/prometheus:v2.52.0
+    container_name: fraud-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    depends_on:
+      - scoring-service
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:11.0.0
+    container_name: fraud-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana-data:/var/lib/grafana
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+
+  feedback-consumer:
+    build:
+      context: ./feedback
+      dockerfile: Dockerfile
+    container_name: fraud-feedback
+    depends_on:
+      kafka:
+        condition: service_healthy
+    environment:
+      BOOTSTRAP_SERVERS: kafka:29092
+      FEEDBACK_BUFFER_PATH: /data/feedback/feedback_buffer.jsonl
+    volumes:
+      - feedback-data:/data/feedback
+    restart: unless-stopped
+
+  retrain-trigger:
+    build:
+      context: ./feedback
+      dockerfile: Dockerfile
+    container_name: fraud-retrain-trigger
+    command: ["python", "retrain_trigger.py"]
+    depends_on:
+      - feedback-consumer
+    environment:
+      BOOTSTRAP_SERVERS: kafka:29092
+      FEEDBACK_BUFFER_PATH: /data/feedback/feedback_buffer.jsonl
+      DATASET_PATH: /data/raw/creditcard.csv
+      RETRAIN_THRESHOLD: "500"
+      CHECK_INTERVAL: "300"
+    volumes:
+      - feedback-data:/data/feedback
+      - ./data:/data/raw:ro
+    restart: unless-stopped
+
   kafka-init:
     image: confluentinc/cp-kafka:7.6.1
     container_name: fraud-kafka-init
@@ -138,6 +199,10 @@ services:
       kafka-topics --bootstrap-server kafka:29092 --create --if-not-exists \
         --topic review_queue --partitions 3 --replication-factor 1 \
         --config retention.ms=604800000
+
+      kafka-topics --bootstrap-server kafka:29092 --create --if-not-exists \
+        --topic feedback_labels --partitions 3 --replication-factor 1 \
+        --config retention.ms=604800000
       "
     restart: on-failure
 
@@ -145,3 +210,5 @@ volumes:
   zookeeper-data:
   zookeeper-log:
   kafka-data:
+  grafana-data:
+  feedback-data:

@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: feedback-consumer
+  namespace: fraud-detection
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: feedback-consumer
+  template:
+    metadata:
+      labels:
+        app: feedback-consumer
+    spec:
+      containers:
+        - name: feedback-consumer
+          image: fraud-feedback:latest
+          envFrom:
+            - configMapRef:
+                name: fraud-detection-config
+          volumeMounts:
+            - name: feedback-data
+              mountPath: /data/feedback
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "200m"
+              memory: "256Mi"
+      volumes:
+        - name: feedback-data
+          persistentVolumeClaim:
+            claimName: feedback-pvc
