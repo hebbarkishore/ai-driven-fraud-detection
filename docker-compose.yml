@@ -168,7 +168,7 @@ services:
       CHECK_INTERVAL: "300"
     volumes:
       - feedback-data:/data/feedback
-      - ./data:/data/raw:ro
+      - ./data/raw:/data/raw:ro
     restart: unless-stopped
 
   kafka-init:

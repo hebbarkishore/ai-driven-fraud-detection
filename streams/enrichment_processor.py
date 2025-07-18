@@ -1,4 +1,5 @@
 import json
+import os
 import signal
 import sys
 
@@ -7,7 +8,7 @@ from confluent_kafka import Consumer, KafkaError, Producer
 from feature_engine import compute_features
 from state_store import WindowedStateStore
 
-BOOTSTRAP_SERVERS = "kafka:29092"
+BOOTSTRAP_SERVERS = os.getenv("BOOTSTRAP_SERVERS", "localhost:9092")
 TOPIC_IN = "raw_transactions"
 TOPIC_OUT = "enriched_transactions"
 GROUP_ID = "enrichment-processor"

@@ -1,5 +1,6 @@
 import argparse
 import json
+import os
 import random
 import sys
 import time
@@ -10,7 +11,7 @@ from typing import Optional
 from confluent_kafka import Producer
 from confluent_kafka.admin import AdminClient, NewTopic
 
-BOOTSTRAP_SERVERS = "localhost:9092"
+BOOTSTRAP_SERVERS = os.getenv("BOOTSTRAP_SERVERS", "localhost:9092")
 TOPIC_RAW_TRANSACTIONS = "raw_transactions"
 
 MERCHANT_CATEGORIES = [
